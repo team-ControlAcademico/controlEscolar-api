@@ -1,0 +1,5 @@
+{"level":"info","message":"Servidor corriendo en http://localhost:3000","timestamp":"2026-05-11T23:12:16.161Z"}
+{"level":"info","message":"Documentación en http://localhost:3000/api-docs","timestamp":"2026-05-11T23:12:16.170Z"}
+{"level":"info","message":"Health check solicitado","timestamp":"2026-05-11T23:13:21.022Z"}
+{"level":"info","message":"::ffff:127.0.0.1 - - [11/May/2026:23:13:21 +0000] \"GET /health HTTP/1.1\" 200 59 \"-\" \"Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0\"","timestamp":"2026-05-11T23:13:21.041Z"}
+{"level":"info","message":"::ffff:127.0.0.1 - - [11/May/2026:23:13:21 +0000] \"GET /favicon.ico HTTP/1.1\" 404 150 \"-\" \"Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0\"","timestamp":"2026-05-11T23:13:21.174Z"}
