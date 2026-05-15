@@ -4,15 +4,50 @@ const { success, error } = require('../utils/response');
 
 exports.stats = async (req, res) => {
   try {
-    const [alumnos, maestros, grupos, materias, padres] = await Promise.all([
-      Alumno.count(),
-      Maestro.count(),
-      Grupo.count(),
-      Materia.count(),
-      Padre.count(),
-    ]);
+    const totalAlumnos = await Alumno.count();
+    const gruposActivos = await Grupo.count();
 
-    return success(res, { alumnos, maestros, grupos, materias, padres });
+    const promedioResult = await Calificacion.findAll({
+      attributes: [[fn('AVG', col('calificacion')), 'promedio']],
+      raw: true,
+    });
+    const promedioGeneral = promedioResult[0]?.promedio
+      ? parseFloat(promedioResult[0].promedio).toFixed(1)
+      : 0;
+
+    const hoy = new Date().toISOString().split('T')[0];
+    const totalAsistencia = await Asistencia.count({ where: { fecha: hoy } });
+    const presentes = await Asistencia.count({ where: { fecha: hoy, estado: 'presente' } });
+    const asistencia = totalAsistencia > 0
+      ? `${Math.round((presentes / totalAsistencia) * 100)}%`
+      : '0%';
+
+    return success(res, {
+      totalAlumnos,
+      gruposActivos,
+      promedioGeneral: parseFloat(promedioGeneral),
+      asistencia,
+    });
+  } catch (err) {
+    return error(res, err.message);
+  }
+};
+
+exports.actividad = async (req, res) => {
+  try {
+    const ultimasAsistencias = await Asistencia.findAll({
+      include: [{ model: Alumno, as: 'alumno', attributes: ['nombre', 'apellido_paterno'] }],
+      order: [['created_at', 'DESC']],
+      limit: 10,
+    });
+
+    const actividad = ultimasAsistencias.map((a) => ({
+      nombre: `${a.alumno.nombre} ${a.alumno.apellido_paterno}`,
+      accion: `Marcó ${a.estado}`,
+      tiempo: a.created_at,
+    }));
+
+    return success(res, actividad);
   } catch (err) {
     return error(res, err.message);
   }

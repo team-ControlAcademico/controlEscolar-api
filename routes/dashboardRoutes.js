@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/dashboardController');
+const dashboardController = require('../controllers/dashboardController');
 const authenticate = require('../middleware/auth');
 
 router.use(authenticate);
 
-router.get('/stats', controller.stats);
-router.get('/asistencia-hoy', controller.asistenciaHoy);
-router.get('/promedio-calificaciones', controller.promedioCalificaciones);
+router.get('/stats', dashboardController.stats);
+router.get('/actividad', dashboardController.actividad);
+router.get('/asistencia-hoy', dashboardController.asistenciaHoy);
+router.get('/promedio-calificaciones', dashboardController.promedioCalificaciones);
 
 module.exports = router;

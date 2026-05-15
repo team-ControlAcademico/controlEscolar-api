@@ -1,17 +1,31 @@
 const { Op } = require('sequelize');
 const { Alumno, Grupo, Padre, Calificacion, Materia, Asistencia } = require('../models');
-const { success, created, notFound, paginated, error } = require('../utils/response');
+const { success, created, notFound, error } = require('../utils/response');
+
+const formatAlumno = (alumno) => ({
+  id: alumno.id,
+  nombre: `${alumno.nombre} ${alumno.apellido_paterno} ${alumno.apellido_materno || ''}`.trim(),
+  matricula: alumno.matricula,
+  grupo: alumno.Grupo ? alumno.Grupo.nombre : null,
+  promedio: parseFloat(alumno.promedio) || 0,
+  estatus: alumno.estatus,
+});
 
 exports.index = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 15;
-    const offset = (page - 1) * limit;
-
     const where = {};
-    if (req.query.grupo_id) {
-      where.grupo_id = req.query.grupo_id;
+
+    if (req.query.grupo) {
+      const grupo = await Grupo.findOne({
+        where: { nombre: { [Op.iLike]: `%${req.query.grupo}%` } },
+      });
+      if (grupo) {
+        where.grupo_id = grupo.id;
+      } else {
+        return success(res, []);
+      }
     }
+
     if (req.query.search) {
       where[Op.or] = [
         { nombre: { [Op.iLike]: `%${req.query.search}%` } },
@@ -20,18 +34,13 @@ exports.index = async (req, res) => {
       ];
     }
 
-    const { rows, count } = await Alumno.findAndCountAll({
+    const alumnos = await Alumno.findAll({
       where,
-      include: [
-        { model: Grupo, as: 'grupo' },
-        { model: Padre, as: 'padre' },
-      ],
-      limit,
-      offset,
+      include: [{ model: Grupo, as: 'Grupo' }],
       order: [['nombre', 'ASC']],
     });
 
-    return paginated(res, rows, page, limit, count);
+    return success(res, alumnos.map(formatAlumno));
   } catch (err) {
     return error(res, err.message);
   }
@@ -40,7 +49,10 @@ exports.index = async (req, res) => {
 exports.store = async (req, res) => {
   try {
     const alumno = await Alumno.create(req.body);
-    return created(res, alumno);
+    const loaded = await Alumno.findByPk(alumno.id, {
+      include: [{ model: Grupo, as: 'Grupo' }],
+    });
+    return created(res, formatAlumno(loaded));
   } catch (err) {
     return error(res, err.message);
   }
@@ -50,7 +62,7 @@ exports.show = async (req, res) => {
   try {
     const alumno = await Alumno.findByPk(req.params.id, {
       include: [
-        { model: Grupo, as: 'grupo' },
+        { model: Grupo, as: 'Grupo' },
         { model: Padre, as: 'padre' },
         {
           model: Calificacion,
@@ -62,7 +74,22 @@ exports.show = async (req, res) => {
     });
 
     if (!alumno) return notFound(res);
-    return success(res, alumno);
+
+    return success(res, {
+      id: alumno.id,
+      nombre: `${alumno.nombre} ${alumno.apellido_paterno} ${alumno.apellido_materno || ''}`.trim(),
+      matricula: alumno.matricula,
+      grupo: alumno.Grupo ? alumno.Grupo.nombre : null,
+      promedio: parseFloat(alumno.promedio) || 0,
+      estatus: alumno.estatus,
+      fecha_nacimiento: alumno.fecha_nacimiento,
+      genero: alumno.genero,
+      direccion: alumno.direccion,
+      telefono: alumno.telefono,
+      email: alumno.email,
+      calificaciones: alumno.calificaciones,
+      asistencias: alumno.asistencias,
+    });
   } catch (err) {
     return error(res, err.message);
   }
@@ -74,7 +101,10 @@ exports.update = async (req, res) => {
     if (!alumno) return notFound(res);
 
     await alumno.update(req.body);
-    return success(res, alumno);
+    const loaded = await Alumno.findByPk(alumno.id, {
+      include: [{ model: Grupo, as: 'Grupo' }],
+    });
+    return success(res, formatAlumno(loaded));
   } catch (err) {
     return error(res, err.message);
   }
