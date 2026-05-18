@@ -48,6 +48,14 @@ const Alumno = sequelize.define('Alumno', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  promedio: {
+    type: DataTypes.DECIMAL(4, 2),
+    defaultValue: 0,
+  },
+  estatus: {
+    type: DataTypes.ENUM('activo', 'inactivo', 'egresado'),
+    defaultValue: 'activo',
+  },
   grupo_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
