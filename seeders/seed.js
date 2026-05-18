@@ -5,6 +5,9 @@ async function seed() {
   await sequelize.sync({ force: true });
   console.log('Database synced.');
 
+  // Create superadmin
+  await User.create({ name: 'Super Admin', email: 'superadmin@controlescolar.com', password: 'SuperAdmin2024!', rol: 'admin' });
+
   // Create admin
   await User.create({ name: 'Admin', email: 'admin@controlescolar.com', password: 'password', rol: 'admin' });
 
@@ -38,10 +41,11 @@ async function seed() {
 
   console.log('Seed completed!');
   console.log('Users created:');
-  console.log('  Admin:   admin@controlescolar.com / password');
-  console.log('  Maestro: carlos.lopez@controlescolar.com / password');
-  console.log('  Alumno:  juan.perez@controlescolar.com / password');
-  console.log('  Padre:   maria.lopez@controlescolar.com / password');
+  console.log('  SuperAdmin: superadmin@controlescolar.com / SuperAdmin2024!');
+  console.log('  Admin:      admin@controlescolar.com / password');
+  console.log('  Maestro:    carlos.lopez@controlescolar.com / password');
+  console.log('  Alumno:     juan.perez@controlescolar.com / password');
+  console.log('  Padre:      maria.lopez@controlescolar.com / password');
 
   process.exit(0);
 }

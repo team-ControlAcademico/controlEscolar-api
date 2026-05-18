@@ -6,7 +6,7 @@ const formatAlumno = (alumno) => ({
   id: alumno.id,
   nombre: `${alumno.nombre} ${alumno.apellido_paterno} ${alumno.apellido_materno || ''}`.trim(),
   matricula: alumno.matricula,
-  grupo: alumno.Grupo ? alumno.Grupo.nombre : null,
+  grupo: alumno.grupo ? alumno.grupo.nombre : null,
   promedio: parseFloat(alumno.promedio) || 0,
   estatus: alumno.estatus,
 });
@@ -36,7 +36,7 @@ exports.index = async (req, res) => {
 
     const alumnos = await Alumno.findAll({
       where,
-      include: [{ model: Grupo, as: 'Grupo' }],
+      include: [{ model: Grupo, as: 'grupo' }],
       order: [['nombre', 'ASC']],
     });
 
@@ -50,7 +50,7 @@ exports.store = async (req, res) => {
   try {
     const alumno = await Alumno.create(req.body);
     const loaded = await Alumno.findByPk(alumno.id, {
-      include: [{ model: Grupo, as: 'Grupo' }],
+      include: [{ model: Grupo, as: 'grupo' }],
     });
     return created(res, formatAlumno(loaded));
   } catch (err) {
@@ -62,7 +62,7 @@ exports.show = async (req, res) => {
   try {
     const alumno = await Alumno.findByPk(req.params.id, {
       include: [
-        { model: Grupo, as: 'Grupo' },
+        { model: Grupo, as: 'grupo' },
         { model: Padre, as: 'padre' },
         {
           model: Calificacion,
@@ -79,7 +79,7 @@ exports.show = async (req, res) => {
       id: alumno.id,
       nombre: `${alumno.nombre} ${alumno.apellido_paterno} ${alumno.apellido_materno || ''}`.trim(),
       matricula: alumno.matricula,
-      grupo: alumno.Grupo ? alumno.Grupo.nombre : null,
+      grupo: alumno.grupo ? alumno.grupo.nombre : null,
       promedio: parseFloat(alumno.promedio) || 0,
       estatus: alumno.estatus,
       fecha_nacimiento: alumno.fecha_nacimiento,
@@ -102,7 +102,7 @@ exports.update = async (req, res) => {
 
     await alumno.update(req.body);
     const loaded = await Alumno.findByPk(alumno.id, {
-      include: [{ model: Grupo, as: 'Grupo' }],
+      include: [{ model: Grupo, as: 'grupo' }],
     });
     return success(res, formatAlumno(loaded));
   } catch (err) {

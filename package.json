@@ -8,8 +8,12 @@
     "dev": "nodemon server.js",
     "migrate": "npx sequelize-cli db:migrate",
     "migrate:undo": "npx sequelize-cli db:migrate:undo:all",
-    "seed": "npx sequelize-cli db:seed:all",
-    "seed:undo": "npx sequelize-cli db:seed:undo:all",
+    "seed": "node seeders/seed.js",
+    "seed:undo": "npx sequelize-cli db:migrate:undo:all",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f api",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up -d --build",
     "test": "jest --detectOpenHandles"
   },
   "dependencies": {
