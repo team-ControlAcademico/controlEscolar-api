@@ -11,3 +11,12 @@ exports.loginRules = [
   body('email').isEmail().withMessage('El email debe ser valido.').normalizeEmail(),
   body('password').notEmpty().withMessage('La contraseña es requerida.'),
 ];
+
+exports.forgotPasswordRules = [
+  body('email').isEmail().withMessage('El email debe ser valido.').normalizeEmail(),
+];
+
+exports.resetPasswordRules = [
+  body('token').notEmpty().withMessage('El token es requerido.'),
+  body('password').isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres.'),
+];

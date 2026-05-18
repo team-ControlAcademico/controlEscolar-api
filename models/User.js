@@ -28,6 +28,16 @@ const User = sequelize.define('User', {
     defaultValue: 'alumno',
     allowNull: false,
   },
+  reset_token: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    defaultValue: null,
+  },
+  reset_token_expires_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    defaultValue: null,
+  },
 }, {
   tableName: 'users',
   hooks: {

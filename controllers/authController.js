@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 const config = require('../config/auth');
@@ -13,7 +14,7 @@ exports.register = async (req, res) => {
     }
 
     const user = await User.create({ name, email, password, rol });
-    const token = jwt.sign({ id: user.id }, config.jwtSecret, { expiresIn: config.jwtExpiry });
+    const token = jwt.sign({ id: user.id, rol: user.rol }, config.jwtSecret, { expiresIn: config.jwtExpiry });
 
     return created(res, { user, token });
   } catch (err) {
@@ -27,7 +28,7 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      return notFound(res, 'Credenciales invalidas.');
+      return error(res, 'Credenciales invalidas.', 401);
     }
 
     const valid = await user.validatePassword(password);
@@ -35,7 +36,7 @@ exports.login = async (req, res) => {
       return error(res, 'Credenciales invalidas.', 401);
     }
 
-    const token = jwt.sign({ id: user.id }, config.jwtSecret, { expiresIn: config.jwtExpiry });
+    const token = jwt.sign({ id: user.id, rol: user.rol }, config.jwtSecret, { expiresIn: config.jwtExpiry });
 
     return success(res, { user, token });
   } catch (err) {
@@ -63,6 +64,61 @@ exports.updateProfile = async (req, res) => {
 
     await req.user.update(updates);
     return success(res, req.user);
+  } catch (err) {
+    return error(res, err.message);
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      // Respuesta genérica para no revelar si el email existe
+      return success(res, null, 'Si el email existe, recibirás instrucciones para restablecer tu contraseña.');
+    }
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+
+    await user.update({
+      reset_token: hashedToken,
+      reset_token_expires_at: expiresAt,
+    });
+
+    // En producción este token se enviaría por email.
+    // En desarrollo lo retornamos directamente para facilitar pruebas.
+    return success(res, { token: rawToken, expiresAt }, 'Token de restablecimiento generado.');
+  } catch (err) {
+    return error(res, err.message);
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      where: {
+        reset_token: hashedToken,
+      },
+    });
+
+    if (!user || !user.reset_token_expires_at || user.reset_token_expires_at < new Date()) {
+      return error(res, 'Token invalido o expirado.', 400);
+    }
+
+    await user.update({
+      password,
+      reset_token: null,
+      reset_token_expires_at: null,
+    });
+
+    return success(res, null, 'Contraseña restablecida exitosamente.');
   } catch (err) {
     return error(res, err.message);
   }

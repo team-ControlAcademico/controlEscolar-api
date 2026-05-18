@@ -6,12 +6,16 @@ const { sequelize } = require('./config/database');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const corsOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:8080',
+  'https://control-escolar-web.vercel.app',
+].filter(Boolean);
+
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://control-escolar-web.vercel.app',
-  ],
+  origin: corsOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
 }));
