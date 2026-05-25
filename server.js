@@ -22,6 +22,15 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+try {
+  const swaggerUi = require('swagger-ui-express');
+  const swaggerSpec = require('./config/swagger');
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.get('/api/docs.json', (req, res) => res.json(swaggerSpec));
+} catch (err) {
+  console.warn('Swagger no inicializado:', err.message);
+}
+
 app.use('/api', require('./routes'));
 
 app.get('/up', (req, res) => {

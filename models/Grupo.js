@@ -27,6 +27,18 @@ const Grupo = sequelize.define('Grupo', {
     type: DataTypes.INTEGER,
     defaultValue: 40,
   },
+  ciclo_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  grado_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  turno_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
 }, {
   tableName: 'grupos',
 });
