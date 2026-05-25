@@ -8,6 +8,19 @@ const Calificacion = require('./Calificacion');
 const Asistencia = require('./Asistencia');
 const Horario = require('./Horario');
 const Padre = require('./Padre');
+const Ciclo = require('./Ciclo');
+const Grado = require('./Grado');
+const Turno = require('./Turno');
+const LogAuditoria = require('./LogAuditoria');
+
+Ciclo.hasMany(Grupo, { foreignKey: 'ciclo_id', as: 'grupos' });
+Grupo.belongsTo(Ciclo, { foreignKey: 'ciclo_id', as: 'ciclo' });
+
+Grado.hasMany(Grupo, { foreignKey: 'grado_id', as: 'grupos' });
+Grupo.belongsTo(Grado, { foreignKey: 'grado_id', as: 'gradoRef' });
+
+Turno.hasMany(Grupo, { foreignKey: 'turno_id', as: 'grupos' });
+Grupo.belongsTo(Turno, { foreignKey: 'turno_id', as: 'turno' });
 
 User.hasOne(Alumno, { foreignKey: 'user_id', as: 'alumno' });
 Alumno.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -62,4 +75,8 @@ module.exports = {
   Asistencia,
   Horario,
   Padre,
+  Ciclo,
+  Grado,
+  Turno,
+  LogAuditoria,
 };

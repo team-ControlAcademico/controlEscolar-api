@@ -16,5 +16,9 @@ router.use('/asistencias', require('./asistenciaRoutes'));
 router.use('/horarios', require('./horarioRoutes'));
 router.use('/padres', require('./padreRoutes'));
 router.use('/dashboard', require('./dashboardRoutes'));
+router.use('/ciclos', require('./cicloRoutes'));
+router.use('/grados', require('./gradoRoutes'));
+router.use('/turnos', require('./turnoRoutes'));
+router.use('/auditoria', require('./auditoriaRoutes'));
 
 module.exports = router;
