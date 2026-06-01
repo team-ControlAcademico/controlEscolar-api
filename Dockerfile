@@ -1,32 +1,25 @@
-FROM node:20-alpine AS base
-
-RUN apk add --no-cache postgresql-client
-
+FROM node:22-alpine AS base
+RUN corepack enable && corepack prepare pnpm@11.3.0 --activate
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci
+FROM base AS deps
+COPY package.json pnpm-lock.yaml .npmrc pnpm-workspace.yaml ./
+RUN pnpm install
 
+FROM base AS dev
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+EXPOSE 4000
+CMD ["pnpm", "dev"]
 
-FROM base AS development
-
-ENV NODE_ENV=development
-
-ENTRYPOINT ["sh", "docker-entrypoint.sh"]
-CMD ["npm", "run", "dev"]
-
-FROM node:20-alpine AS production
-
-RUN apk add --no-cache postgresql-client
-
-WORKDIR /app
-
-ENV NODE_ENV=production
-
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm install sequelize-cli --no-save
-
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ENTRYPOINT ["sh", "docker-entrypoint.sh"]
-CMD ["node", "server.js"]
+RUN pnpm run build
+
+FROM base AS runner
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY package.json ./
+EXPOSE 4000
+CMD ["pnpm", "start"]

@@ -1,9 +1,10 @@
 node_modules
-npm-debug.log
+dist
 .env
 .env.local
 .git
 .gitignore
-coverage
-*.log
-.DS_Store
+README.md
+CREDENTIALS.md
+PLAN.md
+AGENTS.md
