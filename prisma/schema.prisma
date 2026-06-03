@@ -1,0 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  ESCOLAR
+  ADMINISTRATIVO
+  DOCENTE
+  ALUMNO
+  PADRE
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(ALUMNO)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  admin           AdminProfile?
+  escolar         EscolarProfile?
+  administrativo  AdministrativoProfile?
+  docente         DocenteProfile?
+  alumno          AlumnoProfile?
+  padre           PadreProfile?
+
+  refreshTokens   RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model AdminProfile {
+  id     String  @id @default(uuid())
+  nombre String
+  curp   String?
+  userId String  @unique
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EscolarProfile {
+  id     String  @id @default(uuid())
+  nombre String
+  curp   String?
+  userId String  @unique
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AdministrativoProfile {
+  id           String  @id @default(uuid())
+  nombre       String
+  curp         String?
+  departamento String?
+  userId       String  @unique
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DocenteProfile {
+  id             String  @id @default(uuid())
+  nombre         String
+  curp           String?
+  especialidad   String?
+  gradoAcademico String?
+  userId         String  @unique
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grupos         Grupo[]
+}
+
+model AlumnoProfile {
+  id        String @id @default(uuid())
+  nombre    String
+  curp      String?
+  matricula String @unique
+  semestre  Int    @default(1)
+  estatus   String @default("ACTIVO")
+  userId    String @unique
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  carreraId String?
+  carrera   Carrera?        @relation(fields: [carreraId], references: [id])
+  padres    PadreProfile[]
+  inscripciones Inscripcion[]
+}
+
+model PadreProfile {
+  id       String         @id @default(uuid())
+  nombre   String
+  curp     String?
+  userId   String         @unique
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alumnoId String?
+  alumno   AlumnoProfile? @relation(fields: [alumnoId], references: [id])
+}
+
+// ─── FASE 2: Gestión Académica ───
+
+model Carrera {
+  id               String   @id @default(uuid())
+  clave            String   @unique
+  nombre           String
+  descripcion      String?
+  creditosTotales  Int      @default(0)
+  duracionSemestres Int     @default(8)
+  activa           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  planes       PlanEstudio[]
+  alumnos      AlumnoProfile[]
+}
+
+model PlanEstudio {
+  id        String   @id @default(uuid())
+  clave     String   @unique
+  nombre    String
+  vigente   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  carreraId String
+  carrera   Carrera @relation(fields: [carreraId], references: [id], onDelete: Cascade)
+  materias  PlanMateria[]
+}
+
+model Materia {
+  id          String   @id @default(uuid())
+  clave       String   @unique
+  nombre      String
+  creditos    Int      @default(0)
+  tipo        String   @default("OBLIGATORIA") // OBLIGATORIA | OPTATIVA
+  descripcion String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  planes       PlanMateria[]
+  prerequisitos Prerequisito[] @relation("PrerequisitoDe")
+  esPrerequisitoDe Prerequisito[] @relation("PrerequisitoRequerido")
+  grupos       Grupo[]
+}
+
+model PlanMateria {
+  id        String @id @default(uuid())
+  semestre  Int
+
+  planId    String
+  plan      PlanEstudio @relation(fields: [planId], references: [id], onDelete: Cascade)
+  materiaId String
+  materia   Materia     @relation(fields: [materiaId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, materiaId])
+}
+
+model Prerequisito {
+  id             String @id @default(uuid())
+  materiaId      String
+  materia        Materia @relation("PrerequisitoDe", fields: [materiaId], references: [id], onDelete: Cascade)
+  prerequisitoId String
+  prerequisito   Materia @relation("PrerequisitoRequerido", fields: [prerequisitoId], references: [id], onDelete: Cascade)
+
+  @@unique([materiaId, prerequisitoId])
+}
+
+model CicloEscolar {
+  id          String   @id @default(uuid())
+  nombre      String
+  fechaInicio DateTime
+  fechaFin    DateTime
+  tipo        String   @default("CUATRIMESTRAL") // CUATRIMESTRAL | MODULAR | RECURSAMIENTO
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  grupos Grupo[]
+}
+
+model Grupo {
+  id          String   @id @default(uuid())
+  clave       String   @unique
+  aula        String?
+  cupoMaximo  Int      @default(30)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  materiaId      String
+  materia        Materia       @relation(fields: [materiaId], references: [id], onDelete: Cascade)
+  cicloEscolarId String
+  cicloEscolar   CicloEscolar  @relation(fields: [cicloEscolarId], references: [id], onDelete: Cascade)
+  docenteId      String
+  docente        DocenteProfile @relation(fields: [docenteId], references: [id])
+
+  horarios      Horario[]
+  inscripciones Inscripcion[]
+}
+
+model Horario {
+  id        String @id @default(uuid())
+  dia       String // LUNES | MARTES | MIERCOLES | JUEVES | VIERNES | SABADO
+  horaInicio String // HH:mm
+  horaFin   String // HH:mm
+  aula      String?
+
+  grupoId String
+  grupo   Grupo @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+}
+
+model Inscripcion {
+  id        String   @id @default(uuid())
+  estatus   String   @default("INSCRITO") // INSCRITO | BAJA | REPROBADO | APROBADO
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  alumnoId String
+  alumno   AlumnoProfile @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+  grupoId  String
+  grupo    Grupo         @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+
+  @@unique([alumnoId, grupoId])
+}

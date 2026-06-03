@@ -1,178 +1,141 @@
-# Control Escolar API
+<div align="center">
+  <h1>🎓 Control Escolar — Backend</h1>
+  <p>API REST para el sistema de control escolar universitario</p>
+</div>
 
-Backend REST API para la plataforma de Control Escolar, construida con Node.js, Express y PostgreSQL.
+---
 
-## Requisitos
+## 📋 Requisitos
 
-- Node.js >= 18.0.0
-- PostgreSQL >= 12
-- npm o yarn
+- [Docker](https://docs.docker.com/get-docker/) 20.10+
+- [Docker Compose](https://docs.docker.com/compose/install/) 2.0+
 
-## Instalacion
+---
+
+## 🚀 Inicio rápido
 
 ```bash
-# Clonar repositorio
-git clone https://github.com/team-ControlAcademico/controlEscolar-api.git
-cd controlEscolar-api
+# 1. Clonar el repositorio
+git clone <repo-url>
+cd control-escolar-backend
 
-# Instalar dependencias
-npm install
-
-# Configurar entorno
+# 2. Copiar variables de entorno (ajustar si es necesario)
 cp .env.example .env
 
-# Configurar base de datos en .env
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=controlescolar
-DB_USER=postgres
-DB_PASS=tu_password
+# 3. Levantar los servicios (PostgreSQL + API)
+docker compose up -d
 
-# Crear base de datos en PostgreSQL
-createdb controlescolar
+# 4. Esperar a que la BD esté healthy (~10 segundos)
 
-# Ejecutar migraciones
-npm run migrate
+# 5. Crear tablas en la base de datos
+docker compose exec backend pnpm db:push
 
-# Ejecutar seeders (datos de prueba)
-npm run seed
-
-# Iniciar servidor de desarrollo
-npm run dev
+# 6. Poblar con datos de prueba
+docker compose exec backend pnpm db:seed
 ```
 
-## Endpoints de Autenticacion
+---
 
-| Metodo | Endpoint              | Descripcion           |
-|--------|----------------------|-----------------------|
-| POST   | /api/auth/register   | Registrar usuario     |
-| POST   | /api/auth/login      | Iniciar sesion        |
-| POST   | /api/auth/logout     | Cerrar sesion (auth)  |
-| GET    | /api/auth/me         | Obtener usuario (auth)|
-| PUT    | /api/auth/me         | Actualizar perfil     |
+## 🌐 URLs
 
-## Endpoints de Recursos (requieren autenticacion Bearer Token)
+| Servicio | URL |
+|----------|-----|
+| **Frontend (Web)** | `http://localhost:5173` |
+| **API REST** | `http://localhost:4000/api` |
+| **Base de datos** | `localhost:5433` |
 
-### Alumnos
-| Metodo | Endpoint                              | Descripcion                    |
-|--------|--------------------------------------|--------------------------------|
-| GET    | /api/alumnos                         | Listar alumnos (paginado)      |
-| POST   | /api/alumnos                         | Crear alumno                   |
-| GET    | /api/alumnos/:id                     | Ver alumno                     |
-| PUT    | /api/alumnos/:id                     | Actualizar alumno              |
-| DELETE | /api/alumnos/:id                     | Eliminar alumno                |
-| GET    | /api/alumnos/:alumnoId/calificaciones| Calificaciones del alumno      |
+> **Nota:** La ruta raíz `GET /api` no tiene handler y devuelve 404. Usa `GET /api/health` para verificar que la API está corriendo. Para ver todos los endpoints, consulta `ROUTES.md`.
 
-### Maestros
-| Metodo | Endpoint               | Descripcion           |
-|--------|-----------------------|-----------------------|
-| GET    | /api/maestros         | Listar maestros       |
-| POST   | /api/maestros         | Crear maestro         |
-| GET    | /api/maestros/:id     | Ver maestro           |
-| PUT    | /api/maestros/:id     | Actualizar maestro    |
-| DELETE | /api/maestros/:id     | Eliminar maestro      |
+---
 
-### Grupos
-| Metodo | Endpoint              | Descripcion           |
-|--------|----------------------|-----------------------|
-| GET    | /api/grupos          | Listar grupos         |
-| POST   | /api/grupos          | Crear grupo           |
-| GET    | /api/grupos/:id      | Ver grupo             |
-| PUT    | /api/grupos/:id      | Actualizar grupo      |
-| DELETE | /api/grupos/:id      | Eliminar grupo        |
+## 🔐 Credenciales de prueba
 
-### Materias
-| Metodo | Endpoint               | Descripcion         |
-|--------|-----------------------|---------------------|
-| GET    | /api/materias         | Listar materias     |
-| POST   | /api/materias         | Crear materia       |
-| GET    | /api/materias/:id     | Ver materia         |
-| PUT    | /api/materias/:id     | Actualizar materia  |
-| DELETE | /api/materias/:id     | Eliminar materia    |
+> **No incluidas en el repositorio por seguridad.**
+> Las credenciales se encuentran en `CREDENTIALS.md` (archivo excluido de git).
+> Solicítalas al líder de proyecto o genera tus propios usuarios con `POST /api/auth/register`.
+>
+> Para desarrollo local, ejecuta `pnpm db:seed` que crea 6 usuarios de prueba (uno por rol).
 
-### Calificaciones
-| Metodo | Endpoint                     | Descripcion                |
-|--------|-----------------------------|----------------------------|
-| GET    | /api/calificaciones         | Listar calificaciones      |
-| POST   | /api/calificaciones         | Crear calificacion         |
-| GET    | /api/calificaciones/:id     | Ver calificacion           |
-| PUT    | /api/calificaciones/:id     | Actualizar calificacion    |
-| DELETE | /api/calificaciones/:id     | Eliminar calificacion      |
+---
 
-### Asistencias
-| Metodo | Endpoint                     | Descripcion                 |
-|--------|-----------------------------|-----------------------------|
-| GET    | /api/asistencias            | Listar asistencias          |
-| POST   | /api/asistencias            | Registrar asistencia        |
-| GET    | /api/asistencias/:id        | Ver asistencia              |
-| PUT    | /api/asistencias/:id        | Actualizar asistencia       |
-| DELETE | /api/asistencias/:id        | Eliminar asistencia         |
-| POST   | /api/asistencias/multiple   | Registrar multiples asistencias |
+## 📚 Endpoints
 
-### Horarios
-| Metodo | Endpoint               | Descripcion           |
-|--------|-----------------------|-----------------------|
-| GET    | /api/horarios         | Listar horarios       |
-| POST   | /api/horarios         | Crear horario         |
-| GET    | /api/horarios/:id     | Ver horario           |
-| PUT    | /api/horarios/:id     | Actualizar horario    |
-| DELETE | /api/horarios/:id     | Eliminar horario      |
+### Autenticación
 
-### Padres
-| Metodo | Endpoint               | Descripcion           |
-|--------|-----------------------|-----------------------|
-| GET    | /api/padres           | Listar padres         |
-| POST   | /api/padres           | Crear padre           |
-| GET    | /api/padres/:id       | Ver padre             |
-| PUT    | /api/padres/:id       | Actualizar padre      |
-| DELETE | /api/padres/:id       | Eliminar padre        |
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `POST` | `/api/auth/register` | Registrar nuevo usuario |
+| `POST` | `/api/auth/login` | Iniciar sesión |
+| `POST` | `/api/auth/refresh` | Renovar access token |
+| `GET` | `/api/auth/profile` | Obtener perfil del usuario |
+| `POST` | `/api/auth/logout` | Cerrar sesión |
 
-### Dashboard
-| Metodo | Endpoint                                  | Descripcion                    |
-|--------|------------------------------------------|--------------------------------|
-| GET    | /api/dashboard/stats                     | Estadisticas generales         |
-| GET    | /api/dashboard/asistencia-hoy            | Resumen de asistencia del dia  |
-| GET    | /api/dashboard/promedio-calificaciones   | Promedio de calificaciones     |
+### Sistema
 
-## Usuarios de Prueba (seeders)
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/api/health` | Health check del servidor |
 
-| Rol     | Email                           | Password |
-|---------|--------------------------------|----------|
-| Admin   | admin@controlescolar.com       | password |
-| Maestro | carlos.lopez@controlescolar.com| password |
-| Alumno  | juan.perez@controlescolar.com  | password |
-| Padre   | maria.lopez@controlescolar.com | password |
+---
 
-## Comandos
+## 🛠 Comandos útiles
 
-```bash
-npm run dev          # Iniciar en modo desarrollo (con nodemon)
-npm start            # Iniciar en produccion
-npm run migrate      # Ejecutar migraciones
-npm run migrate:undo # Revertir migraciones
-npm run seed         # Ejecutar seeders
-npm run seed:undo    # Revertir seeders
-```
+| Comando | Descripción |
+|---------|-------------|
+| `docker compose up -d` | Levantar servicios |
+| `docker compose down` | Detener servicios |
+| `docker compose logs backend -f` | Ver logs de la API |
+| `docker compose exec backend pnpm db:push` | Sincronizar schema con BD |
+| `docker compose exec backend pnpm db:seed` | Poblar datos de prueba |
+| `docker compose exec backend pnpm db:reset` | Resetear BD completa |
+| `docker compose exec backend pnpm db:studio` | Abrir Prisma Studio |
 
-## Estructura del Proyecto
+---
+
+## 🧱 Tecnologías
+
+| Categoría | Herramienta |
+|-----------|-------------|
+| Runtime | Node.js 22 |
+| Framework | Express 4 |
+| ORM | Prisma 6 |
+| BD | PostgreSQL 16 |
+| Auth | JWT + bcryptjs |
+| Validación | Zod |
+| Lenguaje | TypeScript 5 |
+
+---
+
+## 📁 Estructura
 
 ```
-controlEscolar-api/
-├── server.js              # Entry point
-├── config/
-│   ├── auth.js            # JWT configuration
-│   ├── config.js          # Sequelize CLI config
-│   └── database.js        # Database connection
-├── models/                # Sequelize models (9)
-├── migrations/            # Database migrations (10)
-├── seeders/               # Database seeders
-├── controllers/           # Route handlers (10)
-├── routes/                # Express routes (11)
-├── middleware/             # JWT auth + role middleware
-├── validators/            # express-validator rules
-└── utils/                 # Response helpers
+backend/
+├── src/
+│   ├── config/           # Configuración (env, DB)
+│   ├── controllers/      # Controladores de cada módulo
+│   ├── middlewares/      # Auth, roles, errores
+│   ├── routes/           # Definición de rutas
+│   ├── services/         # Lógica de negocio
+│   ├── schemas/          # Validación Zod
+│   ├── utils/            # Helpers (JWT, etc.)
+│   └── types/            # Tipos TypeScript
+├── prisma/
+│   ├── schema.prisma     # Modelo de datos
+│   └── seed.ts           # Datos iniciales
+├── Dockerfile
+├── docker-compose.yml
+└── .env.example
 ```
 
-## Licencia
+---
 
-MIT
+## 🔒 Roles del sistema
+
+| Rol | Descripción |
+|-----|-------------|
+| `ADMIN` | Superusuario, acceso total |
+| `ESCOLAR` | Control escolar: inscripciones, kardex, calificaciones |
+| `ADMINISTRATIVO` | Finanzas: pagos, facturación, becas |
+| `DOCENTE` | Asistencia, calificaciones de sus grupos |
+| `ALUMNO` | Consulta sus datos académicos |
+| `PADRE` | Monitorea desempeño de su hijo |
