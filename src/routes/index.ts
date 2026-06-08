@@ -8,6 +8,8 @@ import grupoRoutes from "./grupo.routes";
 import inscripcionRoutes from "./inscripcion.routes";
 import alumnosRoutes from "./alumnos.routes";
 import docentesRoutes from "./docentes.routes";
+import asistenciaRoutes from "./asistencia.routes";
+import calificacionRoutes from "./calificacion.routes";
 
 const router = Router();
 
@@ -20,9 +22,12 @@ router.use("/grupos", grupoRoutes);
 router.use("/inscripciones", inscripcionRoutes);
 router.use("/alumnos", alumnosRoutes);
 router.use("/docentes", docentesRoutes);
+router.use("/asistencias", asistenciaRoutes);
+router.use("/calificaciones", calificacionRoutes);
 
 router.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 export default router;
+

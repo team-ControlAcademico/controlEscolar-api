@@ -93,6 +93,8 @@ model AlumnoProfile {
   carrera   Carrera?        @relation(fields: [carreraId], references: [id])
   padres    PadreProfile[]
   inscripciones Inscripcion[]
+  asistencias   Asistencia[]
+  calificaciones Calificacion[]
 }
 
 model PadreProfile {
@@ -201,8 +203,10 @@ model Grupo {
   docenteId      String
   docente        DocenteProfile @relation(fields: [docenteId], references: [id])
 
-  horarios      Horario[]
-  inscripciones Inscripcion[]
+  horarios       Horario[]
+  inscripciones  Inscripcion[]
+  asistencias    Asistencia[]
+  calificaciones Calificacion[]
 }
 
 model Horario {
@@ -228,4 +232,37 @@ model Inscripcion {
   grupo    Grupo         @relation(fields: [grupoId], references: [id], onDelete: Cascade)
 
   @@unique([alumnoId, grupoId])
+}
+
+// ─── FASE 3: Asistencia y Evaluación ───
+
+model Asistencia {
+  id            String   @id @default(uuid())
+  fecha         DateTime @db.Date
+  presente      Boolean  @default(true)
+  justificacion String?
+  createdAt     DateTime @default(now())
+
+  alumnoId String
+  alumno   AlumnoProfile @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+  grupoId  String
+  grupo    Grupo         @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+
+  @@unique([alumnoId, grupoId, fecha])
+}
+
+model Calificacion {
+  id           String   @id @default(uuid())
+  unidad       Int      // 1, 2, 3
+  calificacion Float    // 0.0 - 10.0
+  tipo         String   @default("ORDINARIO") // ORDINARIO | EXTRAORDINARIO | TITULO
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  alumnoId String
+  alumno   AlumnoProfile @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+  grupoId  String
+  grupo    Grupo         @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+
+  @@unique([alumnoId, grupoId, unidad, tipo])
 }

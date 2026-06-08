@@ -23,6 +23,11 @@ async function main() {
     { email: "alumno@universidad.mx", password: "Alumno123!", role: "ALUMNO" as Role, nombre: "Alumno Demo", curp: "ALUM800505HDFRNN04", matricula: "20240001", semestre: 3 },
     { email: "alumno2@universidad.mx", password: "Alumno123!", role: "ALUMNO" as Role, nombre: "Ana López", curp: "ALUM800606HDFRNN05", matricula: "20240002", semestre: 3 },
     { email: "alumno3@universidad.mx", password: "Alumno123!", role: "ALUMNO" as Role, nombre: "Carlos Ruiz", curp: "ALUM800707HDFRNN06", matricula: "20240003", semestre: 1 },
+    { email: "alumno4@universidad.mx", password: "Alumno123!", role: "ALUMNO" as Role, nombre: "Diana Martinez", curp: "ALUM800808HDFRNN07", matricula: "20240004", semestre: 3 },
+    { email: "alumno5@universidad.mx", password: "Alumno123!", role: "ALUMNO" as Role, nombre: "Eduardo Garcia", curp: "ALUM800909HDFRNN08", matricula: "20240005", semestre: 3 },
+    { email: "alumno6@universidad.mx", password: "Alumno123!", role: "ALUMNO" as Role, nombre: "Fernanda Gomez", curp: "ALUM801010HDFRNN09", matricula: "20240006", semestre: 3 },
+    { email: "alumno7@universidad.mx", password: "Alumno123!", role: "ALUMNO" as Role, nombre: "Gerardo Perez", curp: "ALUM801111HDFRNN10", matricula: "20240007", semestre: 3 },
+    { email: "alumno8@universidad.mx", password: "Alumno123!", role: "ALUMNO" as Role, nombre: "Hugo Sanchez", curp: "ALUM801212HDFRNN11", matricula: "20240008", semestre: 3 },
     { email: "padre@universidad.mx", password: "Padre123!", role: "PADRE" as Role, nombre: "Padre Demo", curp: "PADR800606HDFRNN05" },
   ];
 
@@ -232,26 +237,98 @@ async function main() {
   });
 
   // ─── INSCRIBIR ALUMNOS ───
-  const alumnos = await prisma.alumnoProfile.findMany({ take: 3 });
-  if (alumnos.length > 0) {
+  const alumnos = await prisma.alumnoProfile.findMany({ take: 8 });
+  for (const alumno of alumnos) {
     await prisma.inscripcion.upsert({
-      where: { alumnoId_grupoId: { alumnoId: alumnos[0].id, grupoId: g1.id } },
+      where: { alumnoId_grupoId: { alumnoId: alumno.id, grupoId: g1.id } },
       update: {},
-      create: { alumnoId: alumnos[0].id, grupoId: g1.id, estatus: "INSCRITO" },
-    });
+      create: { alumnoId: alumno.id, grupoId: g1.id, estatus: "INSCRITO" },
+    }).catch(() => {});
+    
     await prisma.inscripcion.upsert({
-      where: { alumnoId_grupoId: { alumnoId: alumnos[1]?.id, grupoId: g1.id } },
+      where: { alumnoId_grupoId: { alumnoId: alumno.id, grupoId: g2.id } },
       update: {},
-      create: { alumnoId: alumnos[1]?.id, grupoId: g1.id, estatus: "INSCRITO" },
+      create: { alumnoId: alumno.id, grupoId: g2.id, estatus: "INSCRITO" },
     }).catch(() => {});
   }
 
   // ─── ACTUALIZAR CARRERA DE ALUMNOS ───
-  if (alumnos.length > 0) {
-    await prisma.alumnoProfile.update({ where: { id: alumnos[0].id }, data: { carreraId: carreraIng.id } }).catch(() => {});
+  for (const alumno of alumnos) {
+    await prisma.alumnoProfile.update({ where: { id: alumno.id }, data: { carreraId: carreraIng.id } }).catch(() => {});
   }
 
-  console.log("  Grupos, horarios e inscripciones creados\nSeed completado.");
+  // ─── FASE 3: ASISTENCIAS DE EJEMPLO ───
+  console.log("  Generando asistencias de ejemplo...");
+  const asistenciaFechas = [
+    new Date("2024-01-08"),
+    new Date("2024-01-10"),
+    new Date("2024-01-15"),
+    new Date("2024-01-17"),
+    new Date("2024-01-22"),
+    new Date("2024-01-24"),
+    new Date("2024-01-29"),
+    new Date("2024-01-31"),
+  ];
+
+  for (const alumno of alumnos) {
+    for (const fecha of asistenciaFechas) {
+      // Simular ~85% de asistencia
+      const presente = Math.random() > 0.15;
+      await prisma.asistencia.upsert({
+        where: {
+          alumnoId_grupoId_fecha: {
+            alumnoId: alumno.id,
+            grupoId: g1.id,
+            fecha,
+          },
+        },
+        update: {},
+        create: {
+          alumnoId: alumno.id,
+          grupoId: g1.id,
+          fecha,
+          presente,
+          justificacion: !presente && Math.random() > 0.5 ? "Justificación médica" : null,
+        },
+      });
+    }
+  }
+  console.log(`  Asistencias creadas para ${alumnos.length} alumnos en ${asistenciaFechas.length} fechas`);
+
+  // ─── FASE 3: CALIFICACIONES DE EJEMPLO ───
+  console.log("  Generando calificaciones de ejemplo...");
+  const calificacionesData = [
+    { unidad: 1, tipo: "ORDINARIO" },
+    { unidad: 2, tipo: "ORDINARIO" },
+  ];
+
+  for (const alumno of alumnos) {
+    for (const cal of calificacionesData) {
+      // Generar calificación entre 6.0 y 10.0
+      const calificacion = Math.round((6 + Math.random() * 4) * 10) / 10;
+      await prisma.calificacion.upsert({
+        where: {
+          alumnoId_grupoId_unidad_tipo: {
+            alumnoId: alumno.id,
+            grupoId: g1.id,
+            unidad: cal.unidad,
+            tipo: cal.tipo,
+          },
+        },
+        update: {},
+        create: {
+          alumnoId: alumno.id,
+          grupoId: g1.id,
+          unidad: cal.unidad,
+          tipo: cal.tipo,
+          calificacion,
+        },
+      });
+    }
+  }
+  console.log("  Calificaciones (unidad 1 y 2) creadas para alumnos inscritos");
+
+  console.log("  Grupos, horarios, inscripciones, asistencias y calificaciones creados\nSeed completado.");
 }
 
 main()
@@ -262,3 +339,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
