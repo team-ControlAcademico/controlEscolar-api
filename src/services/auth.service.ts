@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { PrismaClient, Role } from "@prisma/client";
 import { RegisterInput } from "../schemas/auth.schema";
 import { AppError } from "../middlewares/error.middleware";
@@ -7,8 +8,11 @@ import {
   signRefreshToken,
   verifyRefreshToken,
 } from "../utils/jwt";
+import { enviarCorreo, correoRecuperacion } from "./email.service";
 
 const prisma = new PrismaClient();
+
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hora
 
 export async function registerUser(data: RegisterInput) {
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
@@ -175,4 +179,55 @@ export async function getProfile(userId: string) {
 
 export async function logoutUser(token: string) {
   await prisma.refreshToken.deleteMany({ where: { token } });
+}
+
+/**
+ * Genera un token temporal de recuperación y lo envía por correo.
+ * Por seguridad NO revela si el correo existe (respuesta uniforme en el controller).
+ */
+export async function solicitarRecuperacion(email: string) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user || !user.isActive) return;
+
+  // Invalida tokens previos sin usar para este usuario.
+  await prisma.passwordResetToken.deleteMany({
+    where: { userId: user.id, usedAt: null },
+  });
+
+  const token = crypto.randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+
+  await prisma.passwordResetToken.create({
+    data: { token, userId: user.id, expiresAt },
+  });
+
+  const { subject, text } = correoRecuperacion(token);
+  await enviarCorreo({ to: user.email, subject, text });
+}
+
+/**
+ * Restablece la contraseña a partir de un token válido y no expirado.
+ * Marca el token como usado y revoca todas las sesiones activas.
+ */
+export async function restablecerPassword(token: string, nuevaPassword: string) {
+  const stored = await prisma.passwordResetToken.findUnique({ where: { token } });
+
+  if (!stored || stored.usedAt || stored.expiresAt < new Date()) {
+    throw new AppError("Token inválido o expirado", 400);
+  }
+
+  const hashedPassword = await bcrypt.hash(nuevaPassword, 12);
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: stored.userId },
+      data: { password: hashedPassword },
+    }),
+    prisma.passwordResetToken.update({
+      where: { id: stored.id },
+      data: { usedAt: new Date() },
+    }),
+    // Revoca refresh tokens: las sesiones existentes quedan invalidadas.
+    prisma.refreshToken.deleteMany({ where: { userId: stored.userId } }),
+  ]);
 }

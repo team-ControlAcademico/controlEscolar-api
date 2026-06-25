@@ -45,21 +45,38 @@ export async function obtenerInscripcion(id: string) {
 }
 
 export async function inscribirAlumno(data: InscribirInput) {
-  const existe = await prisma.inscripcion.findUnique({
-    where: { alumnoId_grupoId: { alumnoId: data.alumnoId, grupoId: data.grupoId } },
-  });
-  if (existe) throw new AppError("El alumno ya está inscrito en este grupo", 409);
+  // Transacción serializable: el cupo se valida y la inscripción se crea de
+  // forma atómica, evitando sobrecupo por condiciones de carrera cuando dos
+  // peticiones intentan ocupar el último lugar simultáneamente. Si algo falla,
+  // toda la operación hace rollback.
+  try {
+    return await prisma.$transaction(
+      async (tx) => {
+        const existe = await tx.inscripcion.findUnique({
+          where: { alumnoId_grupoId: { alumnoId: data.alumnoId, grupoId: data.grupoId } },
+        });
+        if (existe) throw new AppError("El alumno ya está inscrito en este grupo", 409);
 
-  const grupo = await prisma.grupo.findUnique({
-    where: { id: data.grupoId },
-    include: { _count: { select: { inscripciones: true } } },
-  });
-  if (!grupo) throw new AppError("Grupo no encontrado", 404);
-  if (grupo._count.inscripciones >= grupo.cupoMaximo) {
-    throw new AppError("El grupo ha alcanzado el cupo máximo", 400);
+        const grupo = await tx.grupo.findUnique({
+          where: { id: data.grupoId },
+          include: { _count: { select: { inscripciones: true } } },
+        });
+        if (!grupo) throw new AppError("Grupo no encontrado", 404);
+        if (grupo._count.inscripciones >= grupo.cupoMaximo) {
+          throw new AppError("El grupo ha alcanzado el cupo máximo", 400);
+        }
+
+        return tx.inscripcion.create({ data });
+      },
+      { isolationLevel: "Serializable" }
+    );
+  } catch (error: any) {
+    // P2034: fallo de serialización por concurrencia → cupo lleno efectivo.
+    if (error?.code === "P2034") {
+      throw new AppError("El grupo ha alcanzado el cupo máximo", 400);
+    }
+    throw error;
   }
-
-  return prisma.inscripcion.create({ data });
 }
 
 export async function cambiarEstatusInscripcion(id: string, estatus: string) {
