@@ -1,5 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { registerSchema, loginSchema, refreshTokenSchema } from "../schemas/auth.schema";
+import {
+  registerSchema,
+  loginSchema,
+  refreshTokenSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from "../schemas/auth.schema";
 import * as authService from "../services/auth.service";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
@@ -47,6 +53,29 @@ export async function logout(req: AuthRequest, res: Response, next: NextFunction
     const { refreshToken } = refreshTokenSchema.parse(req.body);
     await authService.logoutUser(refreshToken);
     res.json({ message: "Sesión cerrada exitosamente" });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function forgotPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { email } = forgotPasswordSchema.parse(req.body);
+    await authService.solicitarRecuperacion(email);
+    // Respuesta uniforme: no revela si el correo está registrado.
+    res.json({
+      message: "Si el correo está registrado, recibirás instrucciones para recuperar tu contraseña.",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function resetPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { token, password } = resetPasswordSchema.parse(req.body);
+    await authService.restablecerPassword(token, password);
+    res.json({ message: "Contraseña actualizada exitosamente" });
   } catch (error) {
     next(error);
   }

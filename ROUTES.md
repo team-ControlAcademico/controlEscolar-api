@@ -35,10 +35,14 @@
 | Método | Ruta | Auth | Descripción |
 |--------|------|------|-------------|
 | POST | `/api/auth/register` | Pública | Registrar nuevo usuario |
-| POST | `/api/auth/login` | Pública | Iniciar sesión. Retorna `{ user, accessToken, refreshToken }` |
+| POST | `/api/auth/login` | Pública | Iniciar sesión. Retorna `{ user, accessToken, refreshToken }`. _Rate limit estricto._ |
 | POST | `/api/auth/refresh` | Pública | Renovar access token |
+| POST | `/api/auth/forgot-password` | Pública | Solicitar recuperación de contraseña (envía token temporal por correo). _Rate limit estricto._ |
+| POST | `/api/auth/reset-password` | Pública | Restablecer contraseña con `{ token, password }`. _Rate limit estricto._ |
 | GET | `/api/auth/profile` | Token | Perfil del usuario autenticado |
 | POST | `/api/auth/logout` | Token | Cerrar sesión |
+
+> **Seguridad:** toda la API está protegida por un _rate limiter_ global (300 req / 15 min por IP). Los endpoints de autenticación sensibles tienen un límite estricto adicional (10 req / 15 min) contra fuerza bruta.
 
 ### Alumnos
 
