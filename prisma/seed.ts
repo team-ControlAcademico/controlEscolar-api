@@ -5,7 +5,7 @@
  * de desarrollo local. NUNCA ejecutar este seed en producción.
  * Las contraseñas están en CREDENTIALS.md (compartido con el equipo).
  */
-import { PrismaClient, Role } from "@prisma/client";
+import { PrismaClient, Prisma, Role } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -328,7 +328,89 @@ async function main() {
   }
   console.log("  Calificaciones (unidad 1 y 2) creadas para alumnos inscritos");
 
-  console.log("  Grupos, horarios, inscripciones, asistencias y calificaciones creados\nSeed completado.");
+  // ─── FASE 4: FINANZAS ───
+  console.log("  Generando datos financieros de ejemplo...");
+
+  // Descuento configurable de catálogo
+  await prisma.descuento.upsert({
+    where: { concepto: "Pronto pago" },
+    update: {},
+    create: {
+      concepto: "Pronto pago",
+      tipo: "PORCENTAJE",
+      valor: new Prisma.Decimal(5),
+      descripcion: "5% por pago antes de la fecha de vencimiento",
+    },
+  });
+
+  // Beca académica vigente para el primer alumno (50%)
+  const [alumnoBecado] = alumnos;
+  if (alumnoBecado) {
+    const yaTieneBeca = await prisma.beca.findFirst({ where: { alumnoId: alumnoBecado.id } });
+    if (!yaTieneBeca) {
+      await prisma.beca.create({
+        data: {
+          alumnoId: alumnoBecado.id,
+          tipo: "ACADEMICA",
+          porcentaje: new Prisma.Decimal(50),
+          descripcion: "Beca de excelencia académica",
+          vigenciaInicio: new Date("2024-01-01"),
+          vigenciaFin: new Date("2024-12-31"),
+        },
+      });
+    }
+  }
+
+  // Colegiatura del ciclo para cada alumno inscrito (aplicando beca si existe)
+  const MONTO_COLEGIATURA = new Prisma.Decimal(3500);
+  for (const alumno of alumnos) {
+    const beca = await prisma.beca.findFirst({
+      where: { alumnoId: alumno.id, activa: true },
+      orderBy: { porcentaje: "desc" },
+    });
+    const descuento = beca
+      ? MONTO_COLEGIATURA.times(beca.porcentaje).div(100).toDecimalPlaces(2)
+      : new Prisma.Decimal(0);
+    const total = MONTO_COLEGIATURA.minus(descuento);
+
+    const colegiatura = await prisma.colegiatura.upsert({
+      where: {
+        alumnoId_cicloEscolarId_concepto: {
+          alumnoId: alumno.id,
+          cicloEscolarId: ciclo.id,
+          concepto: "Colegiatura Enero-Abril 2024",
+        },
+      },
+      update: {},
+      create: {
+        alumnoId: alumno.id,
+        cicloEscolarId: ciclo.id,
+        concepto: "Colegiatura Enero-Abril 2024",
+        monto: MONTO_COLEGIATURA,
+        descuento,
+        recargo: new Prisma.Decimal(0),
+        total,
+        fechaVencimiento: new Date("2024-02-10"),
+      },
+    });
+
+    // Los 3 primeros alumnos ya pagaron su colegiatura completa
+    if (alumnos.indexOf(alumno) < 3 && colegiatura.estatus === "PENDIENTE") {
+      await prisma.pago.create({
+        data: {
+          colegiaturaId: colegiatura.id,
+          alumnoId: alumno.id,
+          monto: total,
+          metodo: "TRANSFERENCIA",
+          referencia: `SEED-${alumno.matricula}`,
+        },
+      });
+      await prisma.colegiatura.update({ where: { id: colegiatura.id }, data: { estatus: "PAGADA" } });
+    }
+  }
+  console.log("  Descuento, beca, colegiaturas y pagos de ejemplo creados");
+
+  console.log("  Grupos, horarios, inscripciones, asistencias, calificaciones y finanzas creados\nSeed completado.");
 }
 
 main()

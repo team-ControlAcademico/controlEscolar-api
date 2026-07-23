@@ -25,14 +25,14 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  admin           AdminProfile?
-  escolar         EscolarProfile?
-  administrativo  AdministrativoProfile?
-  docente         DocenteProfile?
-  alumno          AlumnoProfile?
-  padre           PadreProfile?
+  admin          AdminProfile?
+  escolar        EscolarProfile?
+  administrativo AdministrativoProfile?
+  docente        DocenteProfile?
+  alumno         AlumnoProfile?
+  padre          PadreProfile?
 
-  refreshTokens   RefreshToken[]
+  refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]
 }
 
@@ -46,13 +46,13 @@ model RefreshToken {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
+  id        String    @id @default(uuid())
+  token     String    @unique
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 }
 
 model AdminProfile {
@@ -92,20 +92,23 @@ model DocenteProfile {
 }
 
 model AlumnoProfile {
-  id        String @id @default(uuid())
-  nombre    String
-  curp      String?
-  matricula String @unique
-  semestre  Int    @default(1)
-  estatus   String @default("ACTIVO")
-  userId    String @unique
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  carreraId String?
-  carrera   Carrera?        @relation(fields: [carreraId], references: [id])
-  padres    PadreProfile[]
-  inscripciones Inscripcion[]
-  asistencias   Asistencia[]
+  id             String         @id @default(uuid())
+  nombre         String
+  curp           String?
+  matricula      String         @unique
+  semestre       Int            @default(1)
+  estatus        String         @default("ACTIVO")
+  userId         String         @unique
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  carreraId      String?
+  carrera        Carrera?       @relation(fields: [carreraId], references: [id])
+  padres         PadreProfile[]
+  inscripciones  Inscripcion[]
+  asistencias    Asistencia[]
   calificaciones Calificacion[]
+  colegiaturas   Colegiatura[]
+  pagos          Pago[]
+  becas          Beca[]
 }
 
 model PadreProfile {
@@ -121,18 +124,18 @@ model PadreProfile {
 // ─── FASE 2: Gestión Académica ───
 
 model Carrera {
-  id               String   @id @default(uuid())
-  clave            String   @unique
-  nombre           String
-  descripcion      String?
-  creditosTotales  Int      @default(0)
-  duracionSemestres Int     @default(8)
-  activa           Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                String   @id @default(uuid())
+  clave             String   @unique
+  nombre            String
+  descripcion       String?
+  creditosTotales   Int      @default(0)
+  duracionSemestres Int      @default(8)
+  activa            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  planes       PlanEstudio[]
-  alumnos      AlumnoProfile[]
+  planes  PlanEstudio[]
+  alumnos AlumnoProfile[]
 }
 
 model PlanEstudio {
@@ -144,7 +147,7 @@ model PlanEstudio {
   updatedAt DateTime @updatedAt
 
   carreraId String
-  carrera   Carrera @relation(fields: [carreraId], references: [id], onDelete: Cascade)
+  carrera   Carrera       @relation(fields: [carreraId], references: [id], onDelete: Cascade)
   materias  PlanMateria[]
 }
 
@@ -158,15 +161,15 @@ model Materia {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  planes       PlanMateria[]
-  prerequisitos Prerequisito[] @relation("PrerequisitoDe")
+  planes           PlanMateria[]
+  prerequisitos    Prerequisito[] @relation("PrerequisitoDe")
   esPrerequisitoDe Prerequisito[] @relation("PrerequisitoRequerido")
-  grupos       Grupo[]
+  grupos           Grupo[]
 }
 
 model PlanMateria {
-  id        String @id @default(uuid())
-  semestre  Int
+  id       String @id @default(uuid())
+  semestre Int
 
   planId    String
   plan      PlanEstudio @relation(fields: [planId], references: [id], onDelete: Cascade)
@@ -177,7 +180,7 @@ model PlanMateria {
 }
 
 model Prerequisito {
-  id             String @id @default(uuid())
+  id             String  @id @default(uuid())
   materiaId      String
   materia        Materia @relation("PrerequisitoDe", fields: [materiaId], references: [id], onDelete: Cascade)
   prerequisitoId String
@@ -196,21 +199,22 @@ model CicloEscolar {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  grupos Grupo[]
+  grupos       Grupo[]
+  colegiaturas Colegiatura[]
 }
 
 model Grupo {
-  id          String   @id @default(uuid())
-  clave       String   @unique
-  aula        String?
-  cupoMaximo  Int      @default(30)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  clave      String   @unique
+  aula       String?
+  cupoMaximo Int      @default(30)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   materiaId      String
-  materia        Materia       @relation(fields: [materiaId], references: [id], onDelete: Cascade)
+  materia        Materia        @relation(fields: [materiaId], references: [id], onDelete: Cascade)
   cicloEscolarId String
-  cicloEscolar   CicloEscolar  @relation(fields: [cicloEscolarId], references: [id], onDelete: Cascade)
+  cicloEscolar   CicloEscolar   @relation(fields: [cicloEscolarId], references: [id], onDelete: Cascade)
   docenteId      String
   docente        DocenteProfile @relation(fields: [docenteId], references: [id])
 
@@ -221,14 +225,14 @@ model Grupo {
 }
 
 model Horario {
-  id        String @id @default(uuid())
-  dia       String // LUNES | MARTES | MIERCOLES | JUEVES | VIERNES | SABADO
+  id         String  @id @default(uuid())
+  dia        String // LUNES | MARTES | MIERCOLES | JUEVES | VIERNES | SABADO
   horaInicio String // HH:mm
-  horaFin   String // HH:mm
-  aula      String?
+  horaFin    String // HH:mm
+  aula       String?
 
   grupoId String
-  grupo   Grupo @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  grupo   Grupo  @relation(fields: [grupoId], references: [id], onDelete: Cascade)
 }
 
 model Inscripcion {
@@ -264,8 +268,8 @@ model Asistencia {
 
 model Calificacion {
   id           String   @id @default(uuid())
-  unidad       Int      // 1, 2, 3
-  calificacion Float    // 0.0 - 10.0
+  unidad       Int // 1, 2, 3
+  calificacion Float // 0.0 - 10.0
   tipo         String   @default("ORDINARIO") // ORDINARIO | EXTRAORDINARIO | TITULO
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -276,4 +280,92 @@ model Calificacion {
   grupo    Grupo         @relation(fields: [grupoId], references: [id], onDelete: Cascade)
 
   @@unique([alumnoId, grupoId, unidad, tipo])
+}
+
+// ─── FASE 4: Finanzas ───
+// Los montos usan Decimal(10,2) para evitar errores de redondeo de punto
+// flotante en dinero. El total de una colegiatura = monto - descuento + recargo.
+
+model Colegiatura {
+  id               String   @id @default(uuid())
+  concepto         String   @default("Colegiatura")
+  monto            Decimal  @db.Decimal(10, 2) // cargo base
+  descuento        Decimal  @default(0) @db.Decimal(10, 2) // aplicado por becas/descuentos
+  recargo          Decimal  @default(0) @db.Decimal(10, 2) // por mora
+  total            Decimal  @db.Decimal(10, 2) // monto - descuento + recargo
+  fechaVencimiento DateTime @db.Date
+  estatus          String   @default("PENDIENTE") // PENDIENTE | PARCIAL | PAGADA | VENCIDA | CANCELADA
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  alumnoId       String
+  alumno         AlumnoProfile @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+  cicloEscolarId String
+  cicloEscolar   CicloEscolar  @relation(fields: [cicloEscolarId], references: [id], onDelete: Cascade)
+  pagos          Pago[]
+
+  @@unique([alumnoId, cicloEscolarId, concepto])
+}
+
+model Pago {
+  id         String   @id @default(uuid())
+  monto      Decimal  @db.Decimal(10, 2)
+  fecha      DateTime @default(now())
+  metodo     String   @default("EFECTIVO") // EFECTIVO | TRANSFERENCIA | TARJETA | STRIPE
+  referencia String? // folio interno o id de transacción externa
+  estatus    String   @default("CONFIRMADO") // CONFIRMADO | CANCELADO
+  createdAt  DateTime @default(now())
+
+  colegiaturaId String
+  colegiatura   Colegiatura   @relation(fields: [colegiaturaId], references: [id], onDelete: Cascade)
+  alumnoId      String
+  alumno        AlumnoProfile @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+  factura       Factura?
+}
+
+model Factura {
+  id             String   @id @default(uuid())
+  cfdiUuid       String   @unique // folio fiscal (UUID) del CFDI 4.0
+  serie          String   @default("A")
+  folio          Int
+  rfcReceptor    String
+  razonSocial    String
+  usoCfdi        String   @default("G03") // catálogo SAT de uso de CFDI
+  subtotal       Decimal  @db.Decimal(10, 2)
+  iva            Decimal  @db.Decimal(10, 2)
+  total          Decimal  @db.Decimal(10, 2)
+  xmlData        String? // XML del CFDI cifrado (AES-256-GCM)
+  cadenaOriginal String?
+  selloDigital   String?
+  estatus        String   @default("TIMBRADA") // BORRADOR | TIMBRADA | CANCELADA
+  createdAt      DateTime @default(now())
+
+  pagoId String @unique
+  pago   Pago   @relation(fields: [pagoId], references: [id], onDelete: Cascade)
+}
+
+model Beca {
+  id             String   @id @default(uuid())
+  tipo           String   @default("ACADEMICA") // ACADEMICA | DEPORTIVA | CONVENIO | SOCIOECONOMICA
+  porcentaje     Decimal  @db.Decimal(5, 2) // 0.00 - 100.00
+  descripcion    String?
+  vigenciaInicio DateTime @db.Date
+  vigenciaFin    DateTime @db.Date
+  activa         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  alumnoId String
+  alumno   AlumnoProfile @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+}
+
+model Descuento {
+  id          String   @id @default(uuid())
+  concepto    String   @unique
+  tipo        String   @default("PORCENTAJE") // PORCENTAJE | MONTO
+  valor       Decimal  @db.Decimal(10, 2)
+  descripcion String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

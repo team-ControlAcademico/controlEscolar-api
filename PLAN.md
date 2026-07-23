@@ -99,7 +99,7 @@ DOCENTE captura asistencia y calificaciones de sus grupos. ALUMNO y PADRE consul
 
 ---
 
-## Fase 4 — Finanzas 💰
+## Fase 4 — Finanzas 💰 ✅ COMPLETADA
 
 **Objetivo:** Módulo de cobranza, facturación y becas.
 
@@ -107,24 +107,29 @@ DOCENTE captura asistencia y calificaciones de sus grupos. ALUMNO y PADRE consul
 
 | Modelo | Descripción |
 |--------|-------------|
-| Colegiatura | alumnoId, cicloEscolarId, monto, fechaVencimiento, estatus |
-| Pago | colegiaturaId, monto, fecha, metodo, comprobante |
-| Factura | pagoId, cfdiUuid, xmlData, pdfData (CFDI 4.0 México) |
-| Beca | alumnoId, tipo (ACADEMICA/DEPORTIVA/CONVENIO), porcentaje, vigencia |
-| Descuento | configurable por concepto y periodo |
+| Colegiatura | alumnoId, cicloEscolarId, concepto, monto/descuento/recargo/total `Decimal(10,2)`, fechaVencimiento, estatus (PENDIENTE/PARCIAL/PAGADA/VENCIDA/CANCELADA) |
+| Pago | colegiaturaId, alumnoId, monto, fecha, metodo (EFECTIVO/TRANSFERENCIA/TARJETA/STRIPE), referencia, estatus |
+| Factura | pagoId, cfdiUuid, serie/folio, rfcReceptor, usoCfdi, subtotal/iva/total, xmlData (cifrado AES-256), cadenaOriginal, selloDigital (CFDI 4.0) |
+| Beca | alumnoId, tipo (ACADEMICA/DEPORTIVA/CONVENIO/SOCIOECONOMICA), porcentaje, vigencia, activa |
+| Descuento | concepto (único), tipo (PORCENTAJE/MONTO), valor, activo |
 
-### Funcionalidades
+### Funcionalidades implementadas
 
-- Registro de colegiaturas por ciclo
-- Captura de pagos y generación de estados de cuenta
-- Emisión de CFDIs 4.0 (factura electrónica mexicana)
-- Gestión de becas y descuentos personalizados
-- Reportes financieros (ingresos, cartera vencida, adeudos)
-- Notificaciones de pagos vencidos
+- [x] **Modelos financieros** (BACK-27): montos con `Decimal(10,2)` para precisión exacta.
+- [x] **Cargos automáticos** (BACK-28): `POST /finanzas/colegiaturas/generar` crea la colegiatura de todos los alumnos inscritos en un ciclo, aplicando su beca vigente como descuento. Idempotente. Un scheduler mensual solo necesita invocar este endpoint.
+- [x] **API de transacciones / saldo en tiempo real** (BACK-29): el registro de pago valida saldo y actualiza el estatus de la colegiatura en una transacción `Serializable` (sin sobrepago por concurrencia).
+- [x] **Webhooks de pago** (BACK-30): `POST /finanzas/webhooks/pago`, público, autenticado por firma HMAC-SHA256 (`STRIPE_WEBHOOK_SECRET`).
+- [x] **Descuentos y recargos** (BACK-31): catálogo de descuentos + cálculo de total dinámico.
+- [x] **Facturación CFDI 4.0** (BACK-32/33): emisión con subtotal/IVA desglosados. El timbrado ante el PAC/SAT está aislado en `factura.service.ts` (`timbrarConPAC`) como punto de integración; en dev genera UUID/cadena/sello simulados.
+- [x] **Cifrado AES-256** (BACK-34): el XML del CFDI se guarda cifrado (`utils/crypto.ts`, AES-256-GCM).
+- [x] Estado de cuenta por alumno y del alumno autenticado (`/mi-estado-cuenta`).
+- [x] Reportes financieros: ingresos, cartera total, cartera vencida, alumnos con adeudo, desglose por ciclo.
+
+> **Nota de despliegue:** hay 5 modelos nuevos. Ejecutar `pnpm db:push` (o `pnpm db:migrate <nombre>`) y `pnpm db:seed` para reflejarlos y poblar datos de ejemplo.
 
 ### Roles con acceso
 
-ADMINISTRATIVO gestiona todo. ADMIN supervisa. ALUMNO y PADRE consultan su estado de cuenta.
+ADMINISTRATIVO y ADMIN gestionan todo. ALUMNO y PADRE consultan su estado de cuenta.
 
 ---
 
