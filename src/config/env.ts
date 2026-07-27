@@ -9,6 +9,10 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
   FRONTEND_URL: z.string().url().default("http://localhost:5173"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  // ─── FASE 4: Finanzas ───
+  FINANZAS_ENCRYPTION_KEY: z.string().min(16).default("dev-finanzas-encryption-key-change-me"),
+  STRIPE_WEBHOOK_SECRET: z.string().default("dev-stripe-webhook-secret"),
+  IVA_RATE: z.coerce.number().min(0).max(1).default(0.16), // IVA 16% México
 });
 
 export const env = envSchema.parse(process.env);

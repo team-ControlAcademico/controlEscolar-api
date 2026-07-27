@@ -10,6 +10,7 @@ import alumnosRoutes from "./alumnos.routes";
 import docentesRoutes from "./docentes.routes";
 import asistenciaRoutes from "./asistencia.routes";
 import calificacionRoutes from "./calificacion.routes";
+import finanzasRoutes from "./finanzas.routes";
 
 const router = Router();
 
@@ -24,6 +25,7 @@ router.use("/alumnos", alumnosRoutes);
 router.use("/docentes", docentesRoutes);
 router.use("/asistencias", asistenciaRoutes);
 router.use("/calificaciones", calificacionRoutes);
+router.use("/finanzas", finanzasRoutes);
 
 router.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
