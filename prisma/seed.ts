@@ -410,7 +410,112 @@ async function main() {
   }
   console.log("  Descuento, beca, colegiaturas y pagos de ejemplo creados");
 
-  console.log("  Grupos, horarios, inscripciones, asistencias, calificaciones y finanzas creados\nSeed completado.");
+  // ─── FASE 5: COMUNICACIÓN ───
+  console.log("  Generando datos de comunicación de ejemplo...");
+
+  // Avisos de ejemplo
+  const adminUserId = createdUsers["admin@universidad.mx"];
+  const docenteUserId = createdUsers["docente@universidad.mx"];
+  const alumnoUserId = createdUsers["alumno@universidad.mx"];
+
+  if (adminUserId && docenteUserId && alumnoUserId) {
+    // Aviso general del admin
+    const avisoGeneral = await prisma.aviso.upsert({
+      where: { id: "seed-aviso-1" },
+      update: {},
+      create: {
+        id: "seed-aviso-1",
+        titulo: "Bienvenidos al ciclo Enero-Abril 2024",
+        contenido: "Les damos la bienvenida al nuevo ciclo escolar. Recuerden revisar sus horarios y estar pendientes de los avisos importantes. La administración está a su disposición para cualquier duda.",
+        tipo: "GENERAL",
+        rolesDestino: ["ALUMNO", "DOCENTE", "PADRE"],
+        autorId: adminUserId,
+      },
+    });
+
+    // Aviso académico del control escolar
+    const escolarUserId = createdUsers["escolar@universidad.mx"];
+    if (escolarUserId) {
+      await prisma.aviso.upsert({
+        where: { id: "seed-aviso-2" },
+        update: {},
+        create: {
+          id: "seed-aviso-2",
+          titulo: "Periodo de inscripciones extraordinarias",
+          contenido: "Se abre el periodo de inscripciones extraordinarias del 15 al 20 de enero. Acudir a control escolar con su comprobante de pago.",
+          tipo: "ACADEMICO",
+          rolesDestino: ["ALUMNO"],
+          fechaExpiracion: new Date("2024-01-20"),
+          autorId: escolarUserId,
+        },
+      });
+    }
+
+    // Aviso urgente
+    await prisma.aviso.upsert({
+      where: { id: "seed-aviso-3" },
+      update: {},
+      create: {
+        id: "seed-aviso-3",
+        titulo: "Mantenimiento de servidores",
+        contenido: "El próximo sábado 13 de enero se realizará mantenimiento a los servidores de 22:00 a 06:00. El sistema estará fuera de línea durante ese periodo.",
+        tipo: "URGENTE",
+        rolesDestino: ["ADMIN", "ESCOLAR", "ADMINISTRATIVO", "DOCENTE", "ALUMNO", "PADRE"],
+        autorId: adminUserId,
+      },
+    });
+
+    console.log("  3 avisos de ejemplo creados");
+
+    // Conversaciones y mensajes de ejemplo
+    const [p1DocAlum, p2DocAlum] = [docenteUserId, alumnoUserId].sort();
+    const convDocAlum = await prisma.conversacion.upsert({
+      where: {
+        participante1Id_participante2Id: { participante1Id: p1DocAlum, participante2Id: p2DocAlum },
+      },
+      update: {},
+      create: { participante1Id: p1DocAlum, participante2Id: p2DocAlum },
+    });
+
+    const mensajesDocAlum = [
+      { remitenteId: docenteUserId, contenido: "Hola, recuerda entregar la tarea de Programación I antes del viernes." },
+      { remitenteId: alumnoUserId, contenido: "Sí profesor, ya estoy trabajando en ella. ¿Puedo enviarla por correo?" },
+      { remitenteId: docenteUserId, contenido: "Claro, envíala a mi correo institucional antes de las 23:59." },
+    ];
+
+    for (let i = 0; i < mensajesDocAlum.length; i++) {
+      const m = mensajesDocAlum[i];
+      await prisma.mensaje.create({
+        data: {
+          conversacionId: convDocAlum.id,
+          remitenteId: m.remitenteId,
+          contenido: m.contenido,
+          createdAt: new Date(Date.now() - (mensajesDocAlum.length - i) * 60000), // separados por 1 min
+        },
+      }).catch(() => {}); // skip si ya existe
+    }
+
+    const [p1AdmAlum, p2AdmAlum] = [adminUserId, alumnoUserId].sort();
+    const convAdmAlum = await prisma.conversacion.upsert({
+      where: {
+        participante1Id_participante2Id: { participante1Id: p1AdmAlum, participante2Id: p2AdmAlum },
+      },
+      update: {},
+      create: { participante1Id: p1AdmAlum, participante2Id: p2AdmAlum },
+    });
+
+    await prisma.mensaje.create({
+      data: {
+        conversacionId: convAdmAlum.id,
+        remitenteId: adminUserId,
+        contenido: "Bienvenido al sistema. Si tienes alguna duda sobre el uso de la plataforma, no dudes en escribirme.",
+      },
+    }).catch(() => {});
+
+    console.log("  2 conversaciones con mensajes de ejemplo creadas");
+  }
+
+  console.log("  Grupos, horarios, inscripciones, asistencias, calificaciones, finanzas y comunicación creados\nSeed completado.");
 }
 
 main()
