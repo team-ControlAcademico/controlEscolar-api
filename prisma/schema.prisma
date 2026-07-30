@@ -34,6 +34,13 @@ model User {
 
   refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]
+
+  // ─── FASE 5: Comunicación ───
+  avisosPublicados     Aviso[]         @relation("AvisosPublicados")
+  avisosLeidos         AvisoLeido[]    @relation("AvisosLeidos")
+  conversacionesComoP1 Conversacion[]  @relation("ConversacionesComoP1")
+  conversacionesComoP2 Conversacion[]  @relation("ConversacionesComoP2")
+  mensajesEnviados     Mensaje[]       @relation("MensajesEnviados")
 }
 
 model RefreshToken {
@@ -368,4 +375,61 @@ model Descuento {
   activo      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ─── FASE 5: Comunicación y Portales ───
+
+model Aviso {
+  id              String       @id @default(uuid())
+  titulo          String
+  contenido       String
+  tipo            String       @default("GENERAL") // GENERAL | ACADEMICO | FINANCIERO | URGENTE
+  rolesDestino    String[]     // roles a los que va dirigido, p. ej. ["ALUMNO","PADRE"]
+  fechaExpiracion DateTime?    @db.Date
+  activo          Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  autorId String
+  autor   User         @relation("AvisosPublicados", fields: [autorId], references: [id], onDelete: Cascade)
+  leidos  AvisoLeido[]
+}
+
+model AvisoLeido {
+  id       String   @id @default(uuid())
+  leidoAt  DateTime @default(now())
+
+  avisoId String
+  aviso   Aviso  @relation(fields: [avisoId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User   @relation("AvisosLeidos", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([avisoId, userId])
+}
+
+model Conversacion {
+  id           String   @id @default(uuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  participante1Id String
+  participante1   User   @relation("ConversacionesComoP1", fields: [participante1Id], references: [id], onDelete: Cascade)
+  participante2Id String
+  participante2   User   @relation("ConversacionesComoP2", fields: [participante2Id], references: [id], onDelete: Cascade)
+
+  mensajes Mensaje[]
+
+  @@unique([participante1Id, participante2Id])
+}
+
+model Mensaje {
+  id        String    @id @default(uuid())
+  contenido String
+  leidoAt   DateTime?
+  createdAt DateTime  @default(now())
+
+  remitenteId    String
+  remitente      User          @relation("MensajesEnviados", fields: [remitenteId], references: [id], onDelete: Cascade)
+  conversacionId String
+  conversacion   Conversacion  @relation(fields: [conversacionId], references: [id], onDelete: Cascade)
 }
