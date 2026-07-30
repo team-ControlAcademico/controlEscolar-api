@@ -41,6 +41,10 @@ model User {
   conversacionesComoP1 Conversacion[]  @relation("ConversacionesComoP1")
   conversacionesComoP2 Conversacion[]  @relation("ConversacionesComoP2")
   mensajesEnviados     Mensaje[]       @relation("MensajesEnviados")
+
+  // ─── FASE 6: Certificación y Reportes ───
+  tramitesTitulacion   TramiteTitulacion[]
+  documentosOficiales  DocumentoOficial[]
 }
 
 model RefreshToken {
@@ -433,3 +437,42 @@ model Mensaje {
   conversacionId String
   conversacion   Conversacion  @relation(fields: [conversacionId], references: [id], onDelete: Cascade)
 }
+
+// ─── FASE 6: Certificación y Reportes ───
+
+enum TitulacionEstado {
+  INICIADO
+  REVISION_DOCS
+  PAGO_REALIZADO
+  APROBADO
+  TITULADO
+}
+
+model TramiteTitulacion {
+  id                String           @id @default(uuid())
+  alumnoId          String
+  estado            TitulacionEstado @default(INICIADO)
+  observaciones     String?
+  fechaInicio       DateTime         @default(now())
+  fechaActualizacion DateTime        @updatedAt
+
+  alumno            User             @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+}
+
+enum TipoDocumento {
+  KARDEX
+  CERTIFICADO_PARCIAL
+  CERTIFICADO_TOTAL
+}
+
+model DocumentoOficial {
+  id           String        @id @default(uuid())
+  alumnoId     String
+  tipo         TipoDocumento
+  folio        String        @unique
+  selloDigital String        @db.Text
+  fechaEmision DateTime      @default(now())
+
+  alumno       User          @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+}
+

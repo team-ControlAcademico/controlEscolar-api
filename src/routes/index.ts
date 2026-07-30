@@ -14,6 +14,8 @@ import finanzasRoutes from "./finanzas.routes";
 import comunicacionRoutes from "./comunicacion.routes";
 import mensajeriaRoutes from "./mensajeria.routes";
 import portalRoutes from "./portal.routes";
+import certificacionRoutes from "./certificacion.routes";
+import estadisticasRoutes from "./estadisticas.routes";
 
 const router = Router();
 
@@ -33,9 +35,12 @@ router.use("/comunicacion", comunicacionRoutes);
 router.use("/mensajeria", mensajeriaRoutes);
 router.use("/portal", portalRoutes);
 
+// Fase 6
+router.use("/certificacion", certificacionRoutes);
+router.use("/estadisticas", estadisticasRoutes);
+
 router.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 export default router;
-
