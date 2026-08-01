@@ -139,3 +139,6 @@ backend/
 | `DOCENTE` | Asistencia, calificaciones de sus grupos |
 | `ALUMNO` | Consulta sus datos académicos |
 | `PADRE` | Monitorea desempeño de su hijo |
+
+## 👨‍💻 Desarrollo
+Proyecto en desarrollo por el equipo de Control Académico
