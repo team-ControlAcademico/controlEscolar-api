@@ -14,6 +14,7 @@ import finanzasRoutes from "./finanzas.routes";
 import comunicacionRoutes from "./comunicacion.routes";
 import mensajeriaRoutes from "./mensajeria.routes";
 import portalRoutes from "./portal.routes";
+import usuarioRoutes from "./usuario.routes";
 
 const router = Router();
 
@@ -32,6 +33,7 @@ router.use("/finanzas", finanzasRoutes);
 router.use("/comunicacion", comunicacionRoutes);
 router.use("/mensajeria", mensajeriaRoutes);
 router.use("/portal", portalRoutes);
+router.use("/usuarios", usuarioRoutes);
 
 router.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
