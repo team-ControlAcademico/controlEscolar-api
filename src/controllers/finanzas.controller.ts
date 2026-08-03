@@ -263,3 +263,26 @@ export async function reportes(req: Request, res: Response, next: NextFunction) 
     res.json({ data });
   } catch (e) { next(e); }
 }
+
+export async function pagarEnLinea(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    if (!req.user || !req.user.alumno) {
+      res.status(403).json({ message: "Acceso denegado: solo alumnos pueden usar este endpoint simulado" });
+      return;
+    }
+    const { colegiaturaId, monto } = req.body;
+    if (!colegiaturaId || !monto) {
+      res.status(400).json({ message: "Se requiere colegiaturaId y monto" });
+      return;
+    }
+    // Llama al servicio de registrarPago simulando método STRIPE
+    const data = await pagoService.registrarPago({
+      colegiaturaId,
+      monto,
+      metodo: "STRIPE",
+      alumnoId: req.user.alumno.id,
+      referencia: "pago_simulado_en_linea_" + Date.now(),
+    });
+    res.status(201).json({ message: "Pago en línea (simulado) exitoso", data });
+  } catch (e) { next(e); }
+}

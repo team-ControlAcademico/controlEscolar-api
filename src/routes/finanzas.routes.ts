@@ -47,9 +47,10 @@ router.patch("/facturas/:id/cancelar", authorize(...GESTION), finanzas.cancelarF
 // ─── Reportes financieros ───
 router.get("/reportes", authorize(...GESTION), finanzas.reportes);
 
-// ─── Estado de cuenta ───
+// ─── Estado de cuenta y Pago Alumno ───
 // El alumno/padre consulta el suyo; gestión consulta el de cualquier alumno.
 router.get("/mi-estado-cuenta", authorize("ALUMNO", "PADRE"), finanzas.miEstadoCuenta);
+router.post("/pagar-en-linea", authorize("ALUMNO", "PADRE"), finanzas.pagarEnLinea);
 router.get("/estado-cuenta/:alumnoId", authorize(...GESTION), finanzas.estadoCuenta);
 
 export default router;
