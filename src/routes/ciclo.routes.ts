@@ -6,8 +6,8 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get("/", authorize("ADMIN", "ESCOLAR"), ciclo.listar);
-router.get("/:id", authorize("ADMIN", "ESCOLAR"), ciclo.obtener);
+router.get("/", authorize("ADMIN", "ESCOLAR", "ADMINISTRATIVO", "DOCENTE", "ALUMNO", "PADRE"), ciclo.listar);
+router.get("/:id", authorize("ADMIN", "ESCOLAR", "ADMINISTRATIVO", "DOCENTE", "ALUMNO", "PADRE"), ciclo.obtener);
 router.post("/", authorize("ADMIN", "ESCOLAR"), ciclo.crear);
 router.put("/:id", authorize("ADMIN", "ESCOLAR"), ciclo.actualizar);
 router.delete("/:id", authorize("ADMIN", "ESCOLAR"), ciclo.eliminar);

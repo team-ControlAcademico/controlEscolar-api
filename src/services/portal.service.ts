@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { obtenerBoletaAlumno } from "./calificacion.service";
 
 const prisma = new PrismaClient();
 
@@ -47,13 +48,11 @@ export async function portalAlumno(userId: string) {
       })
     : [];
 
-  // Promedio general (todas las calificaciones del alumno)
-  const calificaciones = await prisma.calificacion.findMany({
-    where: { alumnoId: alumno.id },
-    select: { calificacion: true },
-  });
-  const promedioGeneral = calificaciones.length > 0
-    ? Math.round((calificaciones.reduce((sum, c) => sum + c.calificacion, 0) / calificaciones.length) * 100) / 100
+  // Promedio general (usando la boleta para consistencia)
+  const boletaRes = await obtenerBoletaAlumno(alumno.id);
+  const promediosMateria = boletaRes.boleta.filter((b) => b.promedio != null).map((b) => b.promedio!);
+  const promedioGeneral = promediosMateria.length > 0
+    ? Math.round((promediosMateria.reduce((sum, p) => sum + p, 0) / promediosMateria.length) * 10) / 10
     : null;
 
   // Estado de cuenta resumido
@@ -195,13 +194,11 @@ export async function portalPadre(userId: string) {
   if (padre.alumno) {
     const alumno = padre.alumno;
 
-    // Promedio del hijo
-    const calificaciones = await prisma.calificacion.findMany({
-      where: { alumnoId: alumno.id },
-      select: { calificacion: true },
-    });
-    const promedio = calificaciones.length > 0
-      ? Math.round((calificaciones.reduce((sum, c) => sum + c.calificacion, 0) / calificaciones.length) * 100) / 100
+    // Promedio del hijo (usando la boleta para consistencia)
+    const boletaRes = await obtenerBoletaAlumno(alumno.id);
+    const promediosMateria = boletaRes.boleta.filter((b) => b.promedio != null).map((b) => b.promedio!);
+    const promedio = promediosMateria.length > 0
+      ? Math.round((promediosMateria.reduce((sum, p) => sum + p, 0) / promediosMateria.length) * 10) / 10
       : null;
 
     // Saldo pendiente
