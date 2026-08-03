@@ -266,8 +266,8 @@ export async function reportes(req: Request, res: Response, next: NextFunction) 
 
 export async function pagarEnLinea(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    if (!req.user || !req.user.alumno) {
-      res.status(403).json({ message: "Acceso denegado: solo alumnos pueden usar este endpoint simulado" });
+    if (!req.user || (req.user.role !== "ALUMNO" && req.user.role !== "PADRE")) {
+      res.status(403).json({ message: "Acceso denegado: solo alumnos/padres pueden usar este endpoint simulado" });
       return;
     }
     const { colegiaturaId, monto } = req.body;
@@ -280,7 +280,6 @@ export async function pagarEnLinea(req: AuthRequest, res: Response, next: NextFu
       colegiaturaId,
       monto,
       metodo: "STRIPE",
-      alumnoId: req.user.alumno.id,
       referencia: "pago_simulado_en_linea_" + Date.now(),
     });
     res.status(201).json({ message: "Pago en línea (simulado) exitoso", data });
