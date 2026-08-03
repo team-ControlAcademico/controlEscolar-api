@@ -103,7 +103,7 @@ export async function obtenerBoletaAlumno(alumnoId: string, cicloEscolarId?: str
   });
   if (!alumno) throw new AppError("Alumno no encontrado", 404);
 
-  const whereInscripcion: any = { alumnoId, estatus: "INSCRITO" };
+  const whereInscripcion: any = { alumnoId, estatus: { in: ["INSCRITO", "APROBADO", "REPROBADO"] } };
 
   const inscripciones = await prisma.inscripcion.findMany({
     where: whereInscripcion,

@@ -83,7 +83,17 @@ async function createProfile(userId: string, data: RegisterInput) {
 }
 
 export async function authenticateUser(email: string, password: string) {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: {
+      admin: true,
+      escolar: true,
+      administrativo: true,
+      docente: true,
+      alumno: true,
+      padre: true,
+    },
+  });
   if (!user) {
     throw new AppError("Credenciales inválidas", 401);
   }

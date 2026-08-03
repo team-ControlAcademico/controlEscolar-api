@@ -18,6 +18,7 @@ export async function listarInscripciones(params?: { grupoId?: string; alumnoId?
           materia: { select: { id: true, clave: true, nombre: true } },
           docente: { select: { id: true, nombre: true } },
           cicloEscolar: { select: { id: true, nombre: true } },
+          horarios: true,
         },
       },
     },
