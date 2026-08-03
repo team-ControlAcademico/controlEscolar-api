@@ -5,6 +5,7 @@
  * de desarrollo local. NUNCA ejecutar este seed en producción.
  * Las contraseñas están en CREDENTIALS.md (compartido con el equipo).
  */
+// TODO: Revisar datos de prueba
 import { PrismaClient, Prisma, Role } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 
@@ -243,18 +244,18 @@ async function main() {
       where: { alumnoId_grupoId: { alumnoId: alumno.id, grupoId: g1.id } },
       update: {},
       create: { alumnoId: alumno.id, grupoId: g1.id, estatus: "INSCRITO" },
-    }).catch(() => {});
-    
+    }).catch(() => { });
+
     await prisma.inscripcion.upsert({
       where: { alumnoId_grupoId: { alumnoId: alumno.id, grupoId: g2.id } },
       update: {},
       create: { alumnoId: alumno.id, grupoId: g2.id, estatus: "INSCRITO" },
-    }).catch(() => {});
+    }).catch(() => { });
   }
 
   // ─── ACTUALIZAR CARRERA DE ALUMNOS ───
   for (const alumno of alumnos) {
-    await prisma.alumnoProfile.update({ where: { id: alumno.id }, data: { carreraId: carreraIng.id } }).catch(() => {});
+    await prisma.alumnoProfile.update({ where: { id: alumno.id }, data: { carreraId: carreraIng.id } }).catch(() => { });
   }
 
   // ─── FASE 3: ASISTENCIAS DE EJEMPLO ───
@@ -492,7 +493,7 @@ async function main() {
           contenido: m.contenido,
           createdAt: new Date(Date.now() - (mensajesDocAlum.length - i) * 60000), // separados por 1 min
         },
-      }).catch(() => {}); // skip si ya existe
+      }).catch(() => { }); // skip si ya existe
     }
 
     const [p1AdmAlum, p2AdmAlum] = [adminUserId, alumnoUserId].sort();
@@ -510,7 +511,7 @@ async function main() {
         remitenteId: adminUserId,
         contenido: "Bienvenido al sistema. Si tienes alguna duda sobre el uso de la plataforma, no dudes en escribirme.",
       },
-    }).catch(() => {});
+    }).catch(() => { });
 
     console.log("  2 conversaciones con mensajes de ejemplo creadas");
   }
