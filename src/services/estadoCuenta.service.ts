@@ -88,11 +88,17 @@ export async function obtenerEstadoCuenta(alumnoId: string) {
   };
 }
 
-/** Estado de cuenta del alumno autenticado (portal ALUMNO). */
+/** Estado de cuenta del alumno autenticado (portal ALUMNO) o del hijo vinculado (portal PADRE). */
 export async function obtenerMiEstadoCuenta(userId: string) {
+  // Primero intentar como alumno
   const alumno = await prisma.alumnoProfile.findUnique({ where: { userId }, select: { id: true } });
-  if (!alumno) throw new AppError("Perfil de alumno no encontrado", 404);
-  return obtenerEstadoCuenta(alumno.id);
+  if (alumno) return obtenerEstadoCuenta(alumno.id);
+
+  // Si no es alumno, intentar como padre (buscar al hijo vinculado)
+  const padre = await prisma.padreProfile.findUnique({ where: { userId }, select: { alumnoId: true } });
+  if (padre && padre.alumnoId) return obtenerEstadoCuenta(padre.alumnoId);
+
+  throw new AppError("No se encontró un perfil de alumno o padre vinculado", 404);
 }
 
 /**
