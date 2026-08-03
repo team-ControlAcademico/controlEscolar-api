@@ -32,7 +32,8 @@ export async function misCalificaciones(req: AuthRequest, res: Response, next: N
       res.status(401).json({ message: "No autenticado" });
       return;
     }
-    const result = await calificacionService.obtenerMisCalificaciones(req.user.userId);
+    const cicloEscolarId = req.query.cicloEscolarId as string | undefined;
+    const result = await calificacionService.obtenerMisCalificaciones(req.user.userId, cicloEscolarId);
     res.json({ data: result });
   } catch (e) { next(e); }
 }

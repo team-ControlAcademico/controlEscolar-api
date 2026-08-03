@@ -4,10 +4,11 @@ import type { InscribirInput } from "../schemas/inscripcion.schema";
 
 const prisma = new PrismaClient();
 
-export async function listarInscripciones(params?: { grupoId?: string; alumnoId?: string }) {
+export async function listarInscripciones(params?: { grupoId?: string; alumnoId?: string; cicloId?: string }) {
   const where: any = {};
   if (params?.grupoId) where.grupoId = params.grupoId;
   if (params?.alumnoId) where.alumnoId = params.alumnoId;
+  if (params?.cicloId) where.grupo = { cicloEscolarId: params.cicloId };
 
   return prisma.inscripcion.findMany({
     where,

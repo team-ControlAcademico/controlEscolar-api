@@ -156,12 +156,12 @@ export async function obtenerBoletaAlumno(alumnoId: string, cicloEscolarId?: str
   return { alumno, boleta };
 }
 
-export async function obtenerMisCalificaciones(userId: string) {
+export async function obtenerMisCalificaciones(userId: string, cicloEscolarId?: string) {
   const alumno = await prisma.alumnoProfile.findUnique({
     where: { userId },
     select: { id: true, nombre: true, matricula: true, semestre: true },
   });
   if (!alumno) throw new AppError("Perfil de alumno no encontrado", 404);
 
-  return obtenerBoletaAlumno(alumno.id);
+  return obtenerBoletaAlumno(alumno.id, cicloEscolarId);
 }
